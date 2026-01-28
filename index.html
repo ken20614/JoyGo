@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>房產處理決策樹</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .node-container {
+            transition: all 0.3s ease;
+        }
+        .risk-low {
+            background-color: #d1fae5;
+            border-color: #6ee7b7;
+            color: #065f46;
+        }
+        .risk-medium {
+            background-color: #fef3c7;
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+        .risk-high {
+            background-color: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+        .risk-none {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">房產處理決策樹</h1>
+                <button onclick="resetData()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                    重置資料
+                </button>
+            </div>
+
+            <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                <div class="text-sm text-gray-700">
+                    <div class="font-semibold mb-2">使用說明：</div>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>點擊 ✏️ 編輯選項內容</li>
+                        <li>點擊 ➕ 新增子選項</li>
+                        <li>點擊 🗑️ 刪除選項</li>
+                        <li>點擊箭頭展開/收合子選項</li>
+                        <li>資料會自動儲存在瀏覽器中</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="treeContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const initialData = {
+            id: 'root',
+            text: '房子',
+            expanded: true,
+            children: [
+                {
+                    id: 'sell',
+                    text: '賣',
+                    risk: 'low',
+                    expanded: true,
+                    children: [
+                        {
+                            id: 'sell-1',
+                            text: '償還貸款後餘額均分兩清',
+                            note: '風險最低、最乾脆',
+                            risk: 'low'
+                        }
+                    ]
+                },
+                {
+                    id: 'not-sell',
+                    text: '不賣',
+                    expanded: true,
+                    children: [
+                        {
+                            id: 'litigation',
+                            text: '訴訟路線',
+                            note: '雙輸模式',
+                            risk: 'high',
+                            expanded: true,
+                            children: [
+                                {
+                                    id: 'lit-1',
+                                    text: '剩餘財產分配請求權',
+                                    note: '會牽動名下其他財產',
+                                    risk: 'high'
+                                },
+                                {
+                                    id: 'lit-2',
+                                    text: '分割共有物',
+                                    note: '離婚外的另一個官司',
+                                    risk: 'high'
+                                },
+                                {
+                                    id: 'lit-3',
+                                    text: '法拍',
+                                    note: '最後手段 會影響我信用',
+                                    risk: 'high'
+                                }
+                            ]
+                        },
+                        {
+                            id: 'non-litigation',
+                            text: '非訴訟路線',
+                            risk: 'medium',
+                            expanded: true,
+                            children: [
+                                {
+                                    id: 'agree-1',
+                                    text: '協議 + 同住',
+                                    note: '心理壓力大，但法律最安全 租蜜基地',
+                                    risk: 'medium'
+                                },
+                                {
+                                    id: 'agree-2',
+                                    text: '協議 + 他搬出去',
+                                    note: '能接受的版本',
+                                    risk: 'low'
+                                },
+                                {
+                                    id: 'agree-3',
+                                    text: '協議 + 我搬出去',
+                                    note: '最不利路線',
+                                    risk: 'high'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        let treeData = null;
+        let editingId = null;
+
+        function loadData() {
+            const saved = localStorage.getItem('decisionTree');
+            treeData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(initialData));
+        }
+
+        function saveData() {
+            localStorage.setItem('decisionTree', JSON.stringify(treeData));
+        }
+
+        function resetData() {
+            if (confirm('確定要重置所有資料嗎？這將無法復原。')) {
+                treeData = JSON.parse(JSON.stringify(initialData));
+                saveData();
+                render();
+            }
+        }
+
+        function getRiskClass(risk) {
+            return risk ? `risk-${risk}` : 'risk-none';
+        }
+
+        function getRiskBadge(risk) {
+            switch(risk) {
+                case 'low': return '✓ 低風險';
+                case 'medium': return '! 中風險';
+                case 'high': return '✗ 高風險';
+                default: return '';
+            }
+        }
+
+        function findNode(nodes, id) {
+            for (let node of nodes) {
+                if (node.id === id) return node;
+                if (node.children) {
+                    const found = findNode(node.children, id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        function updateNode(id, updates) {
+            const node = findNode([treeData], id);
+            if (node) {
+                Object.assign(node, updates);
+                saveData();
+                render();
+            }
+        }
+
+        function deleteNode(nodes, id) {
+            return nodes.filter(node => {
+                if (node.id === id) return false;
+                if (node.children) {
+                    node.children = deleteNode(node.children, id);
+                }
+                return true;
+            });
+        }
+
+        function addChild(id) {
+            const parent = findNode([treeData], id);
+            if (parent) {
+                if (!parent.children) parent.children = [];
+                parent.children.push({
+                    id: `node-${Date.now()}`,
+                    text: '新選項',
+                    note: '',
+                    risk: '',
+                    children: []
+                });
+                parent.expanded = true;
+                saveData();
+                render();
+            }
+        }
+
+        function toggleExpand(id) {
+            const node = findNode([treeData], id);
+            if (node) {
+                node.expanded = !node.expanded;
+                saveData();
+                render();
+            }
+        }
+
+        function startEdit(id) {
+            editingId = id;
+            render();
+        }
+
+        function saveEdit(id) {
+            const text = document.getElementById('edit-text').value;
+            const note = document.getElementById('edit-note').value;
+            const risk = document.getElementById('edit-risk').value;
+            
+            updateNode(id, { text, note, risk });
+            editingId = null;
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            render();
+        }
+
+        function deleteNodeById(id) {
+            if (confirm('確定要刪除此選項嗎？')) {
+                treeData.children = deleteNode([treeData], id);
+                saveData();
+                render();
+            }
+        }
+
+        function renderNode(node, level = 0) {
+            const hasChildren = node.children && node.children.length > 0;
+            const isExpanded = node.expanded !== false;
+            const isEditing = editingId === node.id;
+
+            let html = '<div class="my-2 node-container">';
+            html += `<div class="flex items-start gap-2 p-3 rounded-lg border-2 ${getRiskClass(node.risk)}">`;
+
+            if (hasChildren) {
+                html += `<button onclick="toggleExpand('${node.id}')" class="mt-1 hover:bg-white/50 rounded p-1">
+                    ${isExpanded ? '▼' : '▶'}
+                </button>`;
+            }
+
+            html += '<div class="flex-1">';
+
+            if (isEditing) {
+                const currentNode = findNode([treeData], node.id);
+                html += `
+                    <div class="space-y-2">
+                        <input type="text" id="edit-text" value="${currentNode.text}" 
+                            class="w-full px-2 py-1 border rounded" placeholder="選項名稱">
+                        <input type="text" id="edit-note" value="${currentNode.note || ''}" 
+                            class="w-full px-2 py-1 border rounded text-sm" placeholder="備註說明">
+                        <select id="edit-risk" class="px-2 py-1 border rounded text-sm">
+                            <option value="" ${!currentNode.risk ? 'selected' : ''}>無風險標記</option>
+                            <option value="low" ${currentNode.risk === 'low' ? 'selected' : ''}>低風險</option>
+                            <option value="medium" ${currentNode.risk === 'medium' ? 'selected' : ''}>中風險</option>
+                            <option value="high" ${currentNode.risk === 'high' ? 'selected' : ''}>高風險</option>
+                        </select>
+                        <div class="flex gap-2">
+                            <button onclick="saveEdit('${node.id}')" 
+                                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                💾 儲存
+                            </button>
+                            <button onclick="cancelEdit()" 
+                                class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">
+                                ✕ 取消
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `<div class="font-semibold text-lg">${node.text}</div>`;
+                if (node.note) {
+                    html += `<div class="text-sm mt-1 opacity-80">${node.note}</div>`;
+                }
+                if (node.risk) {
+                    html += `<div class="text-xs mt-1 font-medium">${getRiskBadge(node.risk)}</div>`;
+                }
+            }
+
+            html += '</div>';
+
+            if (!isEditing && node.id !== 'root') {
+                html += `
+                    <div class="flex gap-1">
+                        <button onclick="startEdit('${node.id}')" 
+                            class="p-1 hover:bg-white/50 rounded" title="編輯">✏️</button>
+                        <button onclick="addChild('${node.id}')" 
+                            class="p-1 hover:bg-white/50 rounded" title="新增子選項">➕</button>
+                        <button onclick="deleteNodeById('${node.id}')" 
+                            class="p-1 hover:bg-white/50 rounded text-red-600" title="刪除">🗑️</button>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            if (hasChildren && isExpanded) {
+                html += '<div class="ml-8 mt-2 border-l-2 border-gray-300 pl-4">';
+                node.children.forEach(child => {
+                    html += renderNode(child, level + 1);
+                });
+                html += '</div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        function render() {
+            document.getElementById('treeContainer').innerHTML = renderNode(treeData);
+        }
+
+        loadData();
+        render();
+    </script>
+</body>
+</html>
