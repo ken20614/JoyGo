@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joy的秘密</title>
+    <title>Joy的秘密花園</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script></script>
     <style>
@@ -11,48 +11,54 @@
             transition: all 0.3s ease;
         }
         .risk-low {
-            background-color: #c8d5bb;
-            border-color: #a4b899;
-            color: #4a5845;
+            background-color: #e8d5e8;
+            border-color: #d4b5d4;
+            color: #6b4a6b;
         }
         .risk-medium {
-            background-color: #e4d4c8;
-            border-color: #c9b5a8;
-            color: #6b5a4f;
+            background-color: #f5d5c8;
+            border-color: #e4b8a8;
+            color: #7a5548;
         }
         .risk-high {
-            background-color: #d9b8b8;
-            border-color: #c49a9a;
-            color: #6b4a4a;
+            background-color: #f5c8d5;
+            border-color: #e4a8b8;
+            color: #7a485a;
         }
         .risk-none {
-            background-color: #cbd5dd;
-            border-color: #a8b5c2;
-            color: #495661;
+            background-color: #e8e5f0;
+            border-color: #d4cce0;
+            color: #5a5268;
         }
         .tree-line {
-            border-left: 2px solid #d1d5db;
+            border-left: 2px solid #e9d5ff;
             margin-left: 20px;
+        }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+        h1 {
+            text-shadow: 2px 2px 4px rgba(236, 72, 153, 0.1);
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-stone-50 via-rose-50 to-blue-50 min-h-screen p-6">
+<body class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto">
-        <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="bg-white/80 rounded-xl shadow-lg p-6 border-2 border-pink-200">
             <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
-                <h1 class="text-3xl font-bold text-gray-800">Joy的秘密</h1>
+                <h1 class="text-3xl font-bold text-pink-600">🌸 Joy的秘密花園 🌸</h1>
                 <div class="flex gap-2 flex-wrap">
-                    <button onclick="shareLink()" class="px-4 py-2 bg-purple-300 text-white rounded hover:bg-purple-400 transition">
+                    <button onclick="shareLink()" class="px-4 py-2 bg-purple-400 text-white rounded hover:bg-purple-500 transition">
                         🔗 分享連結
                     </button>
-                    <button onclick="resetData()" class="px-4 py-2 bg-rose-300 text-white rounded hover:bg-rose-400 transition">
+                    <button onclick="resetData()" class="px-4 py-2 bg-pink-400 text-white rounded hover:bg-pink-500 transition">
                         🔄 重置
                     </button>
                 </div>
             </div>
 
-            <div class="mb-4 p-4 bg-amber-50/80 rounded-lg border border-amber-200/50">
-                <div class="text-sm text-stone-600">
+            <div class="mb-4 p-4 bg-pink-50/60 rounded-lg border border-pink-200">
+                <div class="text-sm text-purple-800">
                     <div class="font-semibold mb-2">使用說明：</div>
                     <ul class="list-disc list-inside space-y-1">
                         <li>點擊 ✏️ 編輯選項內容</li>
@@ -363,11 +369,11 @@
                         </select>
                         <div class="flex gap-2">
                             <button onclick="saveEdit('${node.id}')" 
-                                class="px-2 py-1 bg-teal-300 text-white rounded hover:bg-teal-400 text-sm flex-1">
+                                class="px-2 py-1 bg-purple-400 text-white rounded hover:bg-purple-500 text-sm flex-1">
                                 💾
                             </button>
                             <button onclick="cancelEdit()" 
-                                class="px-2 py-1 bg-stone-200 rounded hover:bg-stone-300 text-sm flex-1">
+                                class="px-2 py-1 bg-pink-200 rounded hover:bg-pink-300 text-sm flex-1">
                                 ✕
                             </button>
                         </div>
