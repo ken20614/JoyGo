@@ -10,29 +10,33 @@
             transition: all 0.3s ease;
         }
         .risk-low {
-            background-color: #d1fae5;
-            border-color: #6ee7b7;
-            color: #065f46;
+            background-color: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
         }
         .risk-medium {
-            background-color: #fef3c7;
-            border-color: #fcd34d;
-            color: #92400e;
+            background-color: #fef9c3;
+            border-color: #fde047;
+            color: #854d0e;
         }
         .risk-high {
-            background-color: #fee2e2;
-            border-color: #fca5a5;
-            color: #991b1b;
+            background-color: #fecaca;
+            border-color: #f87171;
+            color: #7f1d1d;
         }
         .risk-none {
-            background-color: #f3f4f6;
-            border-color: #d1d5db;
-            color: #374151;
+            background-color: #f9fafb;
+            border-color: #e5e7eb;
+            color: #1f2937;
+        }
+        .tree-line {
+            border-left: 2px solid #d1d5db;
+            margin-left: 20px;
         }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-gray-800">房產處理決策樹</h1>
@@ -54,7 +58,7 @@
                 </div>
             </div>
 
-            <div id="treeContainer"></div>
+            <div id="treeContainer" class="overflow-x-auto"></div>
         </div>
     </div>
 
@@ -262,16 +266,18 @@
             const isExpanded = node.expanded !== false;
             const isEditing = editingId === node.id;
 
-            let html = '<div class="my-2 node-container">';
-            html += `<div class="flex items-start gap-2 p-3 rounded-lg border-2 ${getRiskClass(node.risk)}">`;
-
+            let html = '<div class="flex items-start my-2">';
+            
+            // 節點本身
+            html += '<div class="flex-shrink-0">';
+            html += `<div class="p-3 rounded-lg border-2 ${getRiskClass(node.risk)} min-w-[200px] max-w-[300px]">`;
+            
+            // 展開按鈕（如果有子節點）
             if (hasChildren) {
-                html += `<button onclick="toggleExpand('${node.id}')" class="mt-1 hover:bg-white/50 rounded p-1">
-                    ${isExpanded ? '▼' : '▶'}
+                html += `<button onclick="toggleExpand('${node.id}')" class="float-right hover:bg-white/50 rounded p-1 ml-2">
+                    ${isExpanded ? '◀' : '▶'}
                 </button>`;
             }
-
-            html += '<div class="flex-1">';
 
             if (isEditing) {
                 const currentNode = findNode([treeData], node.id);
@@ -281,7 +287,7 @@
                             class="w-full px-2 py-1 border rounded" placeholder="選項名稱">
                         <input type="text" id="edit-note" value="${currentNode.note || ''}" 
                             class="w-full px-2 py-1 border rounded text-sm" placeholder="備註說明">
-                        <select id="edit-risk" class="px-2 py-1 border rounded text-sm">
+                        <select id="edit-risk" class="px-2 py-1 border rounded text-sm w-full">
                             <option value="" ${!currentNode.risk ? 'selected' : ''}>無風險標記</option>
                             <option value="low" ${currentNode.risk === 'low' ? 'selected' : ''}>低風險</option>
                             <option value="medium" ${currentNode.risk === 'medium' ? 'selected' : ''}>中風險</option>
@@ -289,45 +295,44 @@
                         </select>
                         <div class="flex gap-2">
                             <button onclick="saveEdit('${node.id}')" 
-                                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                💾 儲存
+                                class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm flex-1">
+                                💾
                             </button>
                             <button onclick="cancelEdit()" 
-                                class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">
-                                ✕ 取消
+                                class="px-2 py-1 bg-gray-300 rounded hover:bg-gray-400 text-sm flex-1">
+                                ✕
                             </button>
                         </div>
                     </div>
                 `;
             } else {
-                html += `<div class="font-semibold text-lg">${node.text}</div>`;
+                html += `<div class="font-semibold text-base mb-1">${node.text}</div>`;
                 if (node.note) {
-                    html += `<div class="text-sm mt-1 opacity-80">${node.note}</div>`;
+                    html += `<div class="text-xs mt-1 opacity-75">${node.note}</div>`;
                 }
                 if (node.risk) {
-                    html += `<div class="text-xs mt-1 font-medium">${getRiskBadge(node.risk)}</div>`;
+                    html += `<div class="text-xs mt-2 font-medium">${getRiskBadge(node.risk)}</div>`;
+                }
+                
+                if (node.id !== 'root') {
+                    html += `
+                        <div class="flex gap-1 mt-2">
+                            <button onclick="startEdit('${node.id}')" 
+                                class="p-1 hover:bg-white/50 rounded text-sm" title="編輯">✏️</button>
+                            <button onclick="addChild('${node.id}')" 
+                                class="p-1 hover:bg-white/50 rounded text-sm" title="新增子選項">➕</button>
+                            <button onclick="deleteNodeById('${node.id}')" 
+                                class="p-1 hover:bg-white/50 rounded text-red-600 text-sm" title="刪除">🗑️</button>
+                        </div>
+                    `;
                 }
             }
 
-            html += '</div>';
+            html += '</div></div>';
 
-            if (!isEditing && node.id !== 'root') {
-                html += `
-                    <div class="flex gap-1">
-                        <button onclick="startEdit('${node.id}')" 
-                            class="p-1 hover:bg-white/50 rounded" title="編輯">✏️</button>
-                        <button onclick="addChild('${node.id}')" 
-                            class="p-1 hover:bg-white/50 rounded" title="新增子選項">➕</button>
-                        <button onclick="deleteNodeById('${node.id}')" 
-                            class="p-1 hover:bg-white/50 rounded text-red-600" title="刪除">🗑️</button>
-                    </div>
-                `;
-            }
-
-            html += '</div>';
-
+            // 子節點（橫向排列）
             if (hasChildren && isExpanded) {
-                html += '<div class="ml-8 mt-2 border-l-2 border-gray-300 pl-4">';
+                html += '<div class="flex flex-col gap-2 ml-6 pl-6 border-l-2 border-gray-300">';
                 node.children.forEach(child => {
                     html += renderNode(child, level + 1);
                 });
@@ -346,5 +351,4 @@
         render();
     </script>
 </body>
-
 </html>
