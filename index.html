@@ -10,24 +10,24 @@
             transition: all 0.3s ease;
         }
         .risk-low {
-            background-color: #dcfce7;
-            border-color: #86efac;
-            color: #166534;
+            background-color: #c8d5bb;
+            border-color: #a4b899;
+            color: #4a5845;
         }
         .risk-medium {
-            background-color: #fef9c3;
-            border-color: #fde047;
-            color: #854d0e;
+            background-color: #e4d4c8;
+            border-color: #c9b5a8;
+            color: #6b5a4f;
         }
         .risk-high {
-            background-color: #fecaca;
-            border-color: #f87171;
-            color: #7f1d1d;
+            background-color: #d9b8b8;
+            border-color: #c49a9a;
+            color: #6b4a4a;
         }
         .risk-none {
-            background-color: #f9fafb;
-            border-color: #e5e7eb;
-            color: #1f2937;
+            background-color: #cbd5dd;
+            border-color: #a8b5c2;
+            color: #495661;
         }
         .tree-line {
             border-left: 2px solid #d1d5db;
@@ -35,18 +35,18 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
+<body class="bg-gradient-to-br from-stone-50 via-rose-50 to-blue-50 min-h-screen p-6">
     <div class="max-w-7xl mx-auto">
         <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-gray-800">Joy的秘密</h1>
-                <button onclick="resetData()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                <button onclick="resetData()" class="px-4 py-2 bg-rose-300 text-white rounded hover:bg-rose-400 transition">
                     重置資料
                 </button>
             </div>
 
-            <div class="mb-4 p-4 bg-blue-50 rounded-lg">
-                <div class="text-sm text-gray-700">
+            <div class="mb-4 p-4 bg-amber-50/80 rounded-lg border border-amber-200/50">
+                <div class="text-sm text-stone-600">
                     <div class="font-semibold mb-2">使用說明：</div>
                     <ul class="list-disc list-inside space-y-1">
                         <li>點擊 ✏️ 編輯選項內容</li>
@@ -295,11 +295,11 @@
                         </select>
                         <div class="flex gap-2">
                             <button onclick="saveEdit('${node.id}')" 
-                                class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm flex-1">
+                                class="px-2 py-1 bg-teal-300 text-white rounded hover:bg-teal-400 text-sm flex-1">
                                 💾
                             </button>
                             <button onclick="cancelEdit()" 
-                                class="px-2 py-1 bg-gray-300 rounded hover:bg-gray-400 text-sm flex-1">
+                                class="px-2 py-1 bg-stone-200 rounded hover:bg-stone-300 text-sm flex-1">
                                 ✕
                             </button>
                         </div>
@@ -352,4 +352,3 @@
     </script>
 </body>
 </html>
-
