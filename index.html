@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Joy的秘密</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script></script>
     <style>
         .node-container {
             transition: all 0.3s ease;
@@ -41,12 +42,6 @@
             <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
                 <h1 class="text-3xl font-bold text-gray-800">Joy的秘密</h1>
                 <div class="flex gap-2 flex-wrap">
-                    <button onclick="exportData()" class="px-4 py-2 bg-teal-300 text-white rounded hover:bg-teal-400 transition">
-                        📥 匯出
-                    </button>
-                    <button onclick="document.getElementById('importFile').click()" class="px-4 py-2 bg-blue-300 text-white rounded hover:bg-blue-400 transition">
-                        📤 匯入
-                    </button>
                     <button onclick="shareLink()" class="px-4 py-2 bg-purple-300 text-white rounded hover:bg-purple-400 transition">
                         🔗 分享連結
                     </button>
@@ -55,7 +50,6 @@
                     </button>
                 </div>
             </div>
-            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
 
             <div class="mb-4 p-4 bg-amber-50/80 rounded-lg border border-amber-200/50">
                 <div class="text-sm text-stone-600">
@@ -65,9 +59,8 @@
                         <li>點擊 ➕ 新增子選項</li>
                         <li>點擊 🗑️ 刪除選項</li>
                         <li>點擊箭頭展開/收合子選項</li>
-                        <li>📥 匯出：下載 JSON 檔案備份</li>
-                        <li>📤 匯入：上傳之前匯出的檔案</li>
-                        <li>🔗 分享連結：產生可分享的網址</li>
+                        <li>🔗 分享連結：產生壓縮後的分享網址（壓縮率約 60-70%）</li>
+                        <li>💡 建議用 bit.ly 或 reurl.cc 再次縮短網址</li>
                     </ul>
                 </div>
             </div>
@@ -176,72 +169,66 @@
                 treeData = JSON.parse(JSON.stringify(initialData));
                 saveData();
                 render();
-                alert('已重置為初始資料！');
+                alert('✅ 已重置為初始資料！');
             }
         }
 
-        function exportData() {
-            const dataStr = JSON.stringify(treeData, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `房產決策樹_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            alert('✅ 檔案已下載！');
+        // 壓縮資料
+        function compressData(data) {
+            const jsonStr = JSON.stringify(data);
+            const compressed = pako.deflate(jsonStr, { level: 9 });
+            const base64 = btoa(String.fromCharCode.apply(null, compressed));
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         }
 
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (confirm('確定要匯入此資料嗎？會覆蓋目前的資料。')) {
-                        treeData = imported;
-                        saveData();
-                        render();
-                        alert('✅ 匯入成功！');
-                    }
-                } catch (error) {
-                    alert('❌ 檔案格式錯誤，請選擇正確的 JSON 檔案。');
+        // 解壓縮資料
+        function decompressData(base64) {
+            try {
+                const normalized = base64.replace(/-/g, '+').replace(/_/g, '/');
+                const padding = '='.repeat((4 - normalized.length % 4) % 4);
+                const binary = atob(normalized + padding);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
                 }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
+                const decompressed = pako.inflate(bytes, { to: 'string' });
+                return JSON.parse(decompressed);
+            } catch (error) {
+                console.error('解壓縮失敗:', error);
+                return null;
+            }
         }
 
         function shareLink() {
-            const compressed = encodeURIComponent(JSON.stringify(treeData));
+            const compressed = compressData(treeData);
             const baseUrl = window.location.origin + window.location.pathname;
-            const shareUrl = `${baseUrl}?data=${compressed}`;
+            const shareUrl = `${baseUrl}?d=${compressed}`;
             
-            // 複製到剪貼簿
+            // 計算壓縮率
+            const original = encodeURIComponent(JSON.stringify(treeData)).length;
+            const compressed_len = compressed.length;
+            const ratio = Math.round((1 - compressed_len / original) * 100);
+            
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('🔗 分享連結已複製到剪貼簿！\n\n別人打開這個連結就能看到你的決策樹。\n\n注意：連結很長，建議使用短網址服務（如 bit.ly）。');
+                alert(`🔗 分享連結已複製到剪貼簿！\n\n壓縮率：${ratio}%\n連結長度：${shareUrl.length} 字元\n\n別人打開這個連結就能看到你的決策樹。\n\n💡 建議：用 bit.ly 或 reurl.cc 縮短網址更方便分享！`);
             }).catch(() => {
-                // 如果複製失敗，顯示連結讓使用者手動複製
                 prompt('請複製以下連結分享：', shareUrl);
             });
         }
 
         function loadFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            const dataParam = urlParams.get('data');
+            const dataParam = urlParams.get('d');
             
             if (dataParam) {
-                try {
-                    const decoded = JSON.parse(decodeURIComponent(dataParam));
+                const decoded = decompressData(dataParam);
+                if (decoded) {
                     treeData = decoded;
                     saveData();
-                    // 清除網址參數，避免重複載入
                     window.history.replaceState({}, document.title, window.location.pathname);
                     alert('✅ 已載入分享的決策樹！');
-                } catch (error) {
-                    console.error('載入分享資料失敗:', error);
+                } else {
+                    alert('❌ 載入失敗，連結可能已損壞。');
                 }
             }
         }
